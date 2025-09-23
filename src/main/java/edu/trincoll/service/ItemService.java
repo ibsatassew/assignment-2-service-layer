@@ -9,124 +9,93 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * TODO: AI Collaboration Summary goes here
- * 
- * TODO: Rename this class to match your domain
- * 
- * Service layer implementing business logic.
- * Extends BaseService for common CRUD operations.
+ * Service layer for Item entity.
  */
 @Service
 public class ItemService extends BaseService<Item, Long> {
-    
+
     private final ItemRepository repository;
-    
+
     public ItemService(ItemRepository repository) {
         this.repository = repository;
     }
-    
+
     @Override
-    protected Repository<Item, Long> getRepository() {
+    public Repository<Item, Long> getRepository() {
         return repository;
     }
-    
+
     @Override
-    public void validateEntity(Item entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("Item cannot be null");
-        }
-        if (entity.getTitle() == null || entity.getTitle().trim().isEmpty()) {
+    public void validateEntity(Item item) {
+        if (item == null) throw new IllegalArgumentException("Item cannot be null");
+        if (item.getTitle() == null || item.getTitle().trim().isEmpty())
             throw new IllegalArgumentException("Title is required");
-        }
-        if (entity.getTitle().length() > 100) {
+        if (item.getTitle().length() > 100)
             throw new IllegalArgumentException("Title cannot exceed 100 characters");
-        }
-        // TODO: Add more validation rules
     }
-    
-    /**
-     * Find items by status
-     */
-    public List<Item> findByStatus(Item.Status status) {
-        return repository.findByStatus(status);
-    }
-    
-    /**
-     * Find items by category
-     */
-    public List<Item> findByCategory(String category) {
-        return repository.findByCategory(category);
-    }
-    
-    /**
-     * Group items by category using Collectors
-     * TODO: Implement using streams and Collectors.groupingBy
-     */
+
+    // --- Collection Operations ---
+
     public Map<String, List<Item>> groupByCategory() {
-        // TODO: Implement
-        return Collections.emptyMap();
+        return findAll().stream()
+                .collect(Collectors.groupingBy(Item::getCategory));
     }
-    
-    /**
-     * Get all unique tags from all items
-     * TODO: Implement using Set operations
-     */
+
     public Set<String> getAllUniqueTags() {
-        // TODO: Implement
-        return Collections.emptySet();
+        return findAll().stream()
+                .flatMap(i -> i.getTags().stream())
+                .collect(Collectors.toSet());
     }
-    
-    /**
-     * Get count of items per status
-     * TODO: Implement using Map and streams
-     */
+
     public Map<Item.Status, Long> countByStatus() {
-        // TODO: Implement
-        return Collections.emptyMap();
+        return findAll().stream()
+                .collect(Collectors.groupingBy(Item::getStatus, Collectors.counting()));
     }
-    
-    /**
-     * Find items with multiple tags (AND operation)
-     * TODO: Implement set intersection
-     */
+
     public List<Item> findByAllTags(Set<String> tags) {
-        // TODO: Implement
-        return Collections.emptyList();
+        return findAll().stream()
+                .filter(item -> item.getTags().containsAll(tags))
+                .collect(Collectors.toList());
     }
-    
-    /**
-     * Find items with any of the tags (OR operation)
-     * TODO: Implement set union
-     */
+
     public List<Item> findByAnyTag(Set<String> tags) {
-        // TODO: Implement
-        return Collections.emptyList();
+        return findAll().stream()
+                .filter(item -> !Collections.disjoint(item.getTags(), tags))
+                .collect(Collectors.toList());
     }
-    
-    /**
-     * Get most popular tags (top N by frequency)
-     * TODO: Implement using Map for counting and sorting
-     */
-    public List<String> getMostPopularTags(int limit) {
-        // TODO: Implement
-        return Collections.emptyList();
-    }
-    
-    /**
-     * Search items by query (searches title and description)
-     * TODO: Implement flexible search
-     */
-    public List<Item> search(String query) {
-        // TODO: Implement
-        return Collections.emptyList();
-    }
-    
-    /**
-     * Archive old items (change status to ARCHIVED)
-     * TODO: Implement bulk update operation
-     */
+
     public int archiveInactiveItems() {
-        // TODO: Implement
-        return 0;
+        List<Item> inactive = findAll().stream()
+                .filter(item -> item.getStatus() == Item.Status.INACTIVE)
+                .collect(Collectors.toList());
+
+        inactive.forEach(item -> item.setStatus(Item.Status.ARCHIVED));
+        return inactive.size();
+    }
+
+    public List<String> getMostPopularTags(int topN) {
+        Map<String, Long> tagCounts = findAll().stream()
+                .flatMap(i -> i.getTags().stream())
+                .collect(Collectors.groupingBy(t -> t, Collectors.counting()));
+
+        return tagCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(topN)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
+    public List<Item> search(String query) {
+        String q = query.toLowerCase();
+        return findAll().stream()
+                .filter(item -> item.getTitle().toLowerCase().contains(q) ||
+                        (item.getDescription() != null && item.getDescription().toLowerCase().contains(q)))
+                .collect(Collectors.toList());
+    }
+
+    public List<Item> findByStatus(Item.Status status) {
+        return findAll().stream()
+                .filter(item -> item.getStatus() == status)
+                .collect(Collectors.toList());
     }
 }

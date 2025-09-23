@@ -1,96 +1,87 @@
 package edu.trincoll.repository;
 
 import edu.trincoll.model.Item;
-import org.springframework.stereotype.Repository;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-/**
- * TODO: Rename this class to match your domain
- * 
- * In-memory implementation of the repository using Java collections.
- * Uses ConcurrentHashMap for thread-safety.
- */
-@Repository
 public class InMemoryItemRepository implements ItemRepository {
-    
-    private final Map<Long, Item> storage = new ConcurrentHashMap<>();
-    private final AtomicLong idGenerator = new AtomicLong(1);
-    
+
+    private final Map<Long, Item> items = new HashMap<>();
+    private final AtomicLong idCounter = new AtomicLong(1);
+
     @Override
-    public Item save(Item entity) {
-        if (entity.getId() == null) {
-            entity.setId(idGenerator.getAndIncrement());
+    public Item save(Item item) {
+        if (item.getId() == null) {
+            item.setId(idCounter.getAndIncrement());
         }
-        storage.put(entity.getId(), entity);
-        return entity;
+        items.put(item.getId(), item);
+        return item;
     }
-    
+
     @Override
     public Optional<Item> findById(Long id) {
-        return Optional.ofNullable(storage.get(id));
+        return Optional.ofNullable(items.get(id));
     }
-    
+
     @Override
     public List<Item> findAll() {
-        // TODO: Return defensive copy
-        return new ArrayList<>(storage.values());
+        return new ArrayList<>(items.values());
     }
-    
+
     @Override
     public void deleteById(Long id) {
-        storage.remove(id);
+        items.remove(id);
     }
-    
+
     @Override
     public boolean existsById(Long id) {
-        return storage.containsKey(id);
+        return items.containsKey(id);
     }
-    
-    @Override
-    public long count() {
-        return storage.size();
-    }
-    
+
     @Override
     public void deleteAll() {
-        storage.clear();
-        idGenerator.set(1);
+        items.clear();
     }
-    
+
     @Override
-    public List<Item> saveAll(List<Item> entities) {
-        return entities.stream()
-                .map(this::save)
-                .collect(Collectors.toList());
+    public long count() {
+        return items.size();
     }
-    
+
     @Override
     public List<Item> findByStatus(Item.Status status) {
-        // TODO: Implement using streams
-        return storage.values().stream()
-                .filter(item -> item.getStatus() == status)
+        return items.values().stream()
+                .filter(i -> i.getStatus() == status)
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     public List<Item> findByCategory(String category) {
-        // TODO: Implement
-        return Collections.emptyList();
+        return items.values().stream()
+                .filter(i -> category.equals(i.getCategory()))
+                .collect(Collectors.toList());
     }
-    
+
     @Override
     public List<Item> findByTag(String tag) {
-        // TODO: Implement
-        return Collections.emptyList();
+        return items.values().stream()
+                .filter(i -> i.getTags() != null && i.getTags().contains(tag))
+                .collect(Collectors.toList());
     }
-    
+
     @Override
-    public List<Item> findByTitleContaining(String searchTerm) {
-        // TODO: Implement case-insensitive search
-        return Collections.emptyList();
+    public List<Item> findByTitleContaining(String query) {
+        return items.values().stream()
+                .filter(i -> i.getTitle() != null && i.getTitle().contains(query))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Item> saveAll(List<Item> itemsList) {
+        return itemsList.stream()
+                .map(this::save)
+                .collect(Collectors.toList());
     }
 }
