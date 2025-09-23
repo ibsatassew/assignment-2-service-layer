@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service layer for Item entity.
@@ -43,7 +44,7 @@ public class ItemService extends BaseService<Item, Long> {
 
     public Set<String> getAllUniqueTags() {
         return findAll().stream()
-                .flatMap(i -> i.getTags().stream())
+                .flatMap(i -> i.getTags() != null ? i.getTags().stream() : Stream.empty())
                 .collect(Collectors.toSet());
     }
 
@@ -54,13 +55,13 @@ public class ItemService extends BaseService<Item, Long> {
 
     public List<Item> findByAllTags(Set<String> tags) {
         return findAll().stream()
-                .filter(item -> item.getTags().containsAll(tags))
+                .filter(item -> item.getTags() != null && item.getTags().containsAll(tags))
                 .collect(Collectors.toList());
     }
 
     public List<Item> findByAnyTag(Set<String> tags) {
         return findAll().stream()
-                .filter(item -> !Collections.disjoint(item.getTags(), tags))
+                .filter(item -> item.getTags() != null && !Collections.disjoint(item.getTags(), tags))
                 .collect(Collectors.toList());
     }
 
@@ -69,13 +70,17 @@ public class ItemService extends BaseService<Item, Long> {
                 .filter(item -> item.getStatus() == Item.Status.INACTIVE)
                 .collect(Collectors.toList());
 
-        inactive.forEach(item -> item.setStatus(Item.Status.ARCHIVED));
+        inactive.forEach(item -> {
+            item.setStatus(Item.Status.ARCHIVED);
+            repository.save(item); // persist change
+        });
+
         return inactive.size();
     }
 
     public List<String> getMostPopularTags(int topN) {
         Map<String, Long> tagCounts = findAll().stream()
-                .flatMap(i -> i.getTags().stream())
+                .flatMap(i -> i.getTags() != null ? i.getTags().stream() : Stream.empty())
                 .collect(Collectors.groupingBy(t -> t, Collectors.counting()));
 
         return tagCounts.entrySet().stream()
@@ -88,8 +93,8 @@ public class ItemService extends BaseService<Item, Long> {
     public List<Item> search(String query) {
         String q = query.toLowerCase();
         return findAll().stream()
-                .filter(item -> item.getTitle().toLowerCase().contains(q) ||
-                        (item.getDescription() != null && item.getDescription().toLowerCase().contains(q)))
+                .filter(item -> (item.getTitle() != null && item.getTitle().toLowerCase().contains(q))
+                        || (item.getDescription() != null && item.getDescription().toLowerCase().contains(q)))
                 .collect(Collectors.toList());
     }
 

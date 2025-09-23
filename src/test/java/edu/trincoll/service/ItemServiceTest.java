@@ -29,7 +29,6 @@ class ItemServiceTest {
         service = new ItemService(repository);
         repository.deleteAll();
     }
-    
     @Nested
     @DisplayName("Validation Tests")
     class ValidationTests {
@@ -269,5 +268,6 @@ class ItemServiceTest {
             List<Item> archivedItems = service.findByStatus(Item.Status.ARCHIVED);
             assertThat(archivedItems).hasSize(2);
         }
+
     }
 }
