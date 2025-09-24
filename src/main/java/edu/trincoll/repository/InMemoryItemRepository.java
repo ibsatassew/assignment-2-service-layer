@@ -64,24 +64,5 @@ public class InMemoryItemRepository implements ItemRepository {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<Item> findByTag(String tag) {
-        return items.values().stream()
-                .filter(i -> i.getTags() != null && i.getTags().contains(tag))
-                .collect(Collectors.toList());
-    }
 
-    @Override
-    public List<Item> findByTitleContaining(String query) {
-        return items.values().stream()
-                .filter(i -> i.getTitle() != null && i.getTitle().contains(query))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Item> saveAll(List<Item> itemsList) {
-        return itemsList.stream()
-                .map(this::save)
-                .collect(Collectors.toList());
-    }
 }
