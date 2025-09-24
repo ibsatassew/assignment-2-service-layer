@@ -5,7 +5,7 @@ import edu.trincoll.model.Item;
 import java.util.List;
 import java.util.Optional;
 
-public interface ItemRepository {
+public interface ItemRepository extends Repository<Item, Long> {
 
     Item save(Item item);
 
