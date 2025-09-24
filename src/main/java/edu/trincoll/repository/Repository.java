@@ -38,28 +38,5 @@ public interface Repository<T, ID> {
      */
     void deleteById(ID id);
     
-    /**
-     * Check if an entity exists by ID
-     * @param id the ID to check
-     * @return true if exists, false otherwise
-     */
-    boolean existsById(ID id);
-    
-    /**
-     * Count total number of entities
-     * @return the count
-     */
-    long count();
-    
-    /**
-     * Delete all entities
-     */
-    void deleteAll();
-    
-    /**
-     * Save multiple entities
-     * @param entities the entities to save
-     * @return list of saved entities
-     */
-    List<T> saveAll(List<T> entities);
+
 }
