@@ -13,13 +13,7 @@ public interface ItemRepository extends Repository<Item, Long> {
 
     List<Item> findAll();
 
-    void deleteById(Long id);
-
-    boolean existsById(Long id);
-
-    void deleteAll();
-
-    long count();
+   
 
     // Additional query methods
     List<Item> findByStatus(Item.Status status);
