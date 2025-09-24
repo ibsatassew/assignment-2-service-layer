@@ -21,5 +21,16 @@ public interface ItemRepository extends Repository<Item, Long> {
 
     long count();
 
+    // Additional query methods
+    List<Item> findByStatus(Item.Status status);
+
+    List<Item> findByCategory(String category);
+
+    List<Item> findByTag(String tag);
+
+    List<Item> findByTitleContaining(String query);
+
+    List<Item> saveAll(List<Item> items);
+
 
 }
